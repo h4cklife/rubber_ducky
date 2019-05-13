@@ -193,11 +193,11 @@ def generate_payload(payload, formatter):
     if configuration_status and payload == "exfil":
         try:
             if platform.system() == "Windows":
-                subprocess.run("bin/duckencoder.jar -i payloads/exfil/{0}.txt -o injections/{0}.bin".format(payload),
+                subprocess.run("bin/duckencoder.jar -i tmp/{0}.txt -o injections/{0}.bin".format(payload),
                                shell=True, check=True)
                 print_msg('success', "Successfully encoded!")
             elif platform.system() == "Linux":
-                subprocess.run("java -jar bin/duckencoder.jar -i payloads/exfil/{0}.txt -o injections/{0}.bin".format(
+                subprocess.run("java -jar bin/duckencoder.jar -i tmp/{0}.txt -o injections/{0}.bin".format(
                     payload), shell=True, check=True)
                 print_msg('success', "Successfully encoded!")
 
@@ -213,11 +213,11 @@ def generate_payload(payload, formatter):
     elif configuration_status:
         try:
             if platform.system() == "Windows":
-                subprocess.run("bin/duckencoder.jar -i payloads/{0}.txt -o injections/{0}.bin".format(payload),
+                subprocess.run("bin/duckencoder.jar -i tmp/{0}.txt -o injections/{0}.bin".format(payload),
                                shell=True, check=True)
                 print_msg('success', "Successfully encoded!")
             elif platform.system() == "Linux":
-                subprocess.run("java -jar bin/duckencoder.jar -i payloads/{0}.txt -o injections/{0}.bin".format(payload),
+                subprocess.run("java -jar bin/duckencoder.jar -i tmp/{0}.txt -o injections/{0}.bin".format(payload),
                                shell=True, check=True)
                 print_msg('success', "Successfully encoded!")
 
@@ -300,6 +300,7 @@ def deploy_payload(payload):
                 subprocess.run("copy payloads\\exfil\\i.vbs {1}:\\i.vbs".format(payload, usb_drive), shell=True,
                                check=True)
                 subprocess.run("mkdir {1}:\\slurp".format(payload, usb_drive), shell=True, check=True)
+                print_msg('success', "Deployment of payload succeeded")
             elif platform.system() == "Linux":
                 usb_drive = print_msg('question', "Please provide your MicroSD's location? (/media/user/label) ")
                 subprocess.run("mv injections/{0}.bin {1}/inject.bin".format(payload, usb_drive), shell=True,
@@ -311,16 +312,19 @@ def deploy_payload(payload):
                 subprocess.run("cp payloads/exfil/i.vbs {1}/i.vbs".format(payload, usb_drive), shell=True,
                                check=True)
                 subprocess.run("mkdir {1}/slurp".format(payload, usb_drive), shell=True, check=True)
+                print_msg('success', "Deployment of payload succeeded")
         else:
             if platform.system() == "Windows":
                 usb_drive = print_msg('question', "Please provide your MicroSD's drive letter? ({0})".format(locate_usb().replace(
                     ":", "").replace("\\", "")))
                 subprocess.run("move injections\\{0}.bin {1}:\\inject.bin".format(payload, usb_drive), shell=True,
                                check=True)
+                print_msg('success', "Deployment of payload succeeded")
             elif platform.system() == "Linux":
                 usb_drive = print_msg('question', "Please provide your MicroSD's location? (/media/user/label) ")
                 subprocess.run("mv injections/{0}.bin {1}/inject.bin".format(payload, usb_drive), shell=True,
                                check=True)
+                print_msg('success', "Deployment of payload succeeded")
     except FileNotFoundError as err:
         print("[-] DEPLOY ERROR: {0}".format(err))
     except subprocess.CalledProcessError as err:
