@@ -425,6 +425,11 @@ def select_payload():
         elif script == "99":
             break
 
+def update():
+    subprocess.run("git pull", shell=True, check=True)
+    print_msg('alert', "Exiting! Please restart the application")
+    exit()
+
 if __name__ == "__main__":
     header1 = """
     
@@ -478,7 +483,8 @@ if __name__ == "__main__":
                     ░                            (2) Make script                                 ░ 
                     ·                            (3) Encode payload                              · 
                     ·                            (4) Help                                        · 
-                    ░                            (5) Exit                                        ░ 
+                    ░                            (5) Update (git pull)                           ░ 
+                    ▒                           (99) Exit                                        ▒
                     ▒                                                                            ▒ 
                     ▓          Developed By: @h4cklife - Thanks @hak5darren & @_t0x1c!           ▓ 
                     █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ 
@@ -486,7 +492,6 @@ if __name__ == "__main__":
     """.format(P, W, C, W, C, W)
     ########################### Main ###########################
 
-    print(header1)
     while True:
         print(header1)
         print(header2)
@@ -499,8 +504,10 @@ if __name__ == "__main__":
             encode()
         elif main == "4":
             help()
+        elif main == "5":
+            update()
         elif main == "99":
-            print("{0}\n[!] Exiting!\n{1}".format(P, W))
+            print_msg('alert', "Exiting!")
             sys.exit()
         else:
             print("Did not get that!")
