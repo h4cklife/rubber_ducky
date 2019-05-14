@@ -387,6 +387,9 @@ def select_payload():
         print("[8]  Exfiltrate Wi-Fi Profiles via Storage (Twin Duck)")
         print("This is number 6 + Export and exfiltrate Wif-Fi Profiles via Twin Duck Storage")
         print("-------------------------------------------------")
+        print("[9]  Initiate a download on an Android device via browser")
+        print("Download a file from a specific web address via browser")
+        print("-------------------------------------------------")
         print("[99] Exit")
         print("Break and go to the main menu")
         print("-------------------------------------------------")
@@ -426,6 +429,10 @@ def select_payload():
             exe = print_msg('question', "EXE NAME: ")
             formatter = [url, exe]
             generate_payload('exfil', formatter)
+        elif script == "9":
+            url = print_msg('question', "URL: ")
+            formatter = [url]
+            generate_payload('android_browser_download', formatter)
         elif script == "99":
             break
 
